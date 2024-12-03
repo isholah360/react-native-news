@@ -3,21 +3,20 @@ const dotenv = require('dotenv')
 const cookieParser = require('cookie-parser')
 const cors = require('cors');
 const Port = 4000 || process.env.Port
-const User = require('./api/models/models')
-const router = require('./api/routes/router')
+const User = require('./models/models')
+const router = require('./routes/router')
 const app = express()
 
 
-// app.use(cors({
-//     origin: 'http://10.0.2.2:3000',  
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   }));
+app.use(cors());
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors());
 dotenv.config()
 User.createTable();
 
+app.get('/', (req, res)=>{
+    res.send("hello server")
+})
 
 app.use( "/api/auth", router)
 
