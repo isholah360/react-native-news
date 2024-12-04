@@ -8,27 +8,18 @@ import {
   SafeAreaView,
   Image,
   StatusBar,
-  Alert
+  Alert,
+  ActivityIndicator,
 } from "react-native";
-import {
-  Entypo,
-  MaterialCommunityIcons,
-  AntDesign,
-  FontAwesome,
-} from "@expo/vector-icons";
-
+import { Entypo, MaterialCommunityIcons, FontAwesome } from "@expo/vector-icons";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
-
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type RootStackParamList = {
   Login: undefined;
   Homepage: undefined;
   Signup: undefined;
-  // Add other screens here as needed
 };
 
-// Define navigation prop type
 type NavigationProps = NavigationProp<RootStackParamList>;
 
 interface LoginFormData {
@@ -37,10 +28,7 @@ interface LoginFormData {
 }
 
 const Login: React.FC = () => {
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState<LoginFormData>({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -48,51 +36,48 @@ const Login: React.FC = () => {
   const navigation = useNavigation<NavigationProps>();
 
   const handleLogin = async () => {
-    const apiUrl = 'http://10.0.2.2:4000/api/auth/login';  
-  
-    console.log("Login attempted with:", formData);  
-  
-    fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-      }),
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Login response:', data);  
-        if (data.message === "Login successful") {  
-          navigation.navigate('Homepage'); 
-        }
-      })
-      .catch(err => {
-        console.error('Error during login:', err); 
-        Alert.alert('Error', err.message || 'Unable to connect to the server.');
+    const apiUrl = 'https://react-native-news.onrender.com/api/auth/login';
+    setLoading(true);
+    setErrorMessage(""); 
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Invalid credentials or server error');
+      }
+
+      const data = await response.json();
+
+      if (data.message === "Login successful") {
+        navigation.navigate('Homepage');
+      } else {
+        setErrorMessage("Login failed. Please check your credentials.");
+      }
+    } catch (error) {
+      setErrorMessage(error.message || "An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
-  
 
   const handleGoogleLogin = () => {
-    // Implement Google login
     console.log("Google login attempted");
   };
 
   const handleFacebookLogin = () => {
-    // Implement Facebook login
     console.log("Facebook login attempted");
   };
 
   const handleRegister = () => {
-    navigation.navigate("Signup"); // Navigate to SignUp screen
+    navigation.navigate("Signup");
   };
 
   return (
@@ -100,30 +85,12 @@ const Login: React.FC = () => {
       <StatusBar backgroundColor="#f5f5f5" />
       <View style={styles.content}>
         <Text style={styles.title}>Welcome Back!</Text>
-        <Text style={styles.subtitle}>
-          Enter your email to start shopping and get awesome deals today!
-        </Text>
+        <Text style={styles.subtitle}>Enter your email to start shopping and get awesome deals today!</Text>
 
         <View style={styles.form}>
           {/* Email Input */}
           <View style={styles.inputContainer}>
-            <MaterialCommunityIcons
-              name="email-outline"
-              size={20}
-              color="#999"
-              style={styles.inputIcon}
-            />
-            <Text
-              style={{
-                position: "absolute",
-                top: 8,
-                left: 40,
-                fontSize: 12,
-                color: "#404040",
-              }}
-            >
-              Email
-            </Text>
+            <MaterialCommunityIcons name="email-outline" size={20} color="#999" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="rifqi.naufal@mail.com"
@@ -137,63 +104,39 @@ const Login: React.FC = () => {
 
           {/* Password Input */}
           <View style={styles.inputContainer}>
-            <MaterialCommunityIcons
-              name="lock-outline"
-              size={20}
-              color="#999"
-              style={styles.inputIcon}
-            />
-            <Text
-              style={{
-                position: "absolute",
-                top: 8,
-                left: 40,
-                fontSize: 12,
-                color: "#404040",
-              }}
-            >
-              Password
-            </Text>
+            <MaterialCommunityIcons name="lock-outline" size={20} color="#999" style={styles.inputIcon} />
             <TextInput
               style={[styles.input, styles.passwordInput]}
               placeholder="*********"
               placeholderTextColor="#999"
               secureTextEntry={!showPassword}
               value={formData.password}
-              onChangeText={(text) =>
-                setFormData({ ...formData, password: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, password: text })}
             />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeIcon}
-            >
-              <Entypo
-                name={showPassword ? "eye-with-line" : "eye"}
-                size={20}
-                color="#999"
-              />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+              <Entypo name={showPassword ? "eye-with-line" : "eye"} size={20} color="#999" />
             </TouchableOpacity>
           </View>
 
-          {/* Error Message */}
+        
           {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
 
-          {/* Forgot Password Link */}
+        
           <TouchableOpacity style={styles.forgotPasswordContainer}>
             <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
           </TouchableOpacity>
 
-          {/* Login Button */}
+         
           <TouchableOpacity
             style={styles.loginButton}
             onPress={handleLogin}
             disabled={loading}
           >
-            <Text style={styles.loginButtonText}>
-              {" "}
-              {loading ? "Logging in..." : "Log in"}
-            </Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>Log in</Text>
+            )}
           </TouchableOpacity>
 
           {/* Divider */}
@@ -204,22 +147,12 @@ const Login: React.FC = () => {
           </View>
 
           {/* Social Login Buttons */}
-          <TouchableOpacity
-            style={[styles.socialButton, styles.googleButton]}
-            onPress={handleGoogleLogin}
-          >
-            <Image
-              source={require("../assets/images/google.png")}
-              style={{ height: 16, width: 16, marginVertical: 22 }}
-              resizeMode="cover"
-            />
+          <TouchableOpacity style={[styles.socialButton, styles.googleButton]} onPress={handleGoogleLogin}>
+            <Image source={require("../assets/images/google.png")} style={{ height: 16, width: 16 }} resizeMode="cover" />
             <Text style={styles.socialButtonText}>Log in with Google</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.socialButton, styles.facebookButton]}
-            onPress={handleFacebookLogin}
-          >
+          <TouchableOpacity style={[styles.socialButton, styles.facebookButton]} onPress={handleFacebookLogin}>
             <FontAwesome name="facebook" size={24} color="#4267B2" />
             <Text style={styles.socialButtonText}>Log in with Facebook</Text>
           </TouchableOpacity>
@@ -279,14 +212,12 @@ const styles = StyleSheet.create({
     height: "100%",
     fontSize: 16,
     color: "#333",
-
-    marginTop: 15,
   },
   passwordInput: {
     paddingRight: 40,
   },
   eyeIcon: {
-    padding: 4, // Increase touch target
+    padding: 4,
   },
   errorText: {
     color: "red",
